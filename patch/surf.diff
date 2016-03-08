@@ -1,0 +1,358 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..0153705
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,3 @@
++*.o
++patch/
++surf
+diff --git a/config.def.h b/config.def.h
+index 93a3d49..85e4160 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -37,14 +37,21 @@ static Bool allowgeolocation      = TRUE;
+ 
+ #define SETPROP(p, q) { \
+ 	.v = (char *[]){ "/bin/sh", "-c", \
+-	     "prop=\"`xprop -id $2 $0 " \
++	     "prop=\"`(xprop -id $2 $0 " \
+ 	     "| sed \"s/^$0(STRING) = \\(\\\\\"\\?\\)\\(.*\\)\\1$/\\2/\" " \
+-	     "| xargs -0 printf %b | dmenu`\" &&" \
++	     "| xargs -0 printf %b && "\
++             "cat ~/.surf/bookmarks) | dmenu`\" &&" \
+ 	     "xprop -id $2 -f $1 8s -set $1 \"$prop\"", \
+ 	     p, q, winid, NULL \
+ 	} \
+ }
+ 
++#define BM_ADD { .v = (char *[]){ "/bin/sh", "-c", \
++  "(echo `xprop -id $0 _SURF_URI | cut -d '\"' -f2` && "\
++  "cat ~/.surf/bookmarks) | awk '!seen[$0]++' > ~/.surf/bookmarks_new && "\
++  "mv ~/.surf/bookmarks_new ~/.surf/bookmarks", \
++  winid, NULL } }
++
+ /* DOWNLOAD(URI, referer) */
+ #define DOWNLOAD(d, r) { \
+ 	.v = (char *[]){ "/bin/sh", "-c", \
+@@ -106,6 +113,7 @@ static Key keys[] = {
+ 	{ MODKEY,               GDK_space,  scroll_v,   { .i = +10000 } },
+ 	{ MODKEY,               GDK_i,      scroll_h,   { .i = +1 } },
+ 	{ MODKEY,               GDK_u,      scroll_h,   { .i = -1 } },
++        { MODKEY,               GDK_b,      spawn,      BM_ADD },
+ 
+ 	{ 0,                    GDK_F11,    fullscreen, { 0 } },
+ 	{ 0,                    GDK_Escape, stop,       { 0 } },
+diff --git a/config.h b/config.h
+new file mode 100644
+index 0000000..07bb1a7
+--- /dev/null
++++ b/config.h
+@@ -0,0 +1,171 @@
++/* SURF CONFIG.H */
++/* modifier 0 means no modifier */
++static char *useragent   = "Mozilla/5.0 (X11; U; Unix; en-US) "
++                           "AppleWebKit/537.15 (KHTML, like Gecko) "
++                           "Chrome/24.0.1295.0 Safari/537.15 Surf/"VERSION;
++static char *scriptfile  = "~/.config/surf/script.js";
++static char *styledir    = "~/.config/surf/styles/";
++static char *cachefolder = "~/.cache/surf/cache/";
++static char *historyfile = "~/.local/share/surf/history";
++
++static Bool kioskmode       = FALSE; /* Ignore shortcuts */
++static Bool showindicators  = TRUE;  /* Show indicators in window title */
++static Bool zoomto96dpi     = TRUE;  /* Zoom pages to always emulate 96dpi */
++static Bool runinfullscreen = FALSE; /* Run in fullscreen mode by default */
++
++static guint defaultfontsize = 12;  /* Default font size */
++static gfloat zoomlevel      = 1.0; /* Default zoom level */
++
++/* Soup default features */
++static char *cookiefile     = "~/.cache/surf/cookies.txt";
++static char *cookiepolicies = "Aa@"; /* A: accept all; a: accept nothing,
++                                      * @: accept all except third party */
++static char *cafile       = "/etc/ssl/certs/ca-certificates.crt";
++static Bool strictssl     = FALSE; /* Refuse untrusted SSL connections */
++static time_t sessiontime = 3600;
++
++/* Webkit default features */
++static Bool allowgeolocation      = TRUE;
++static Bool enablediskcache       = TRUE;
++static int  diskcachebytes        = 5 * 1024 * 1024;
++static Bool enableinspector       = TRUE;
++static Bool enableplugins         = TRUE;
++static Bool enablescripts         = TRUE;
++static Bool enablescrollbars      = FALSE;
++static Bool enablespatialbrowsing = TRUE;
++static Bool enablestyle           = TRUE;
++static Bool hidebackground        = FALSE;
++static Bool loadimages            = TRUE;
++
++#define SETPROP(p, q) { \
++	.v = (char *[]){ "/bin/sh", "-c", \
++		"w -setprop $0 $1 $2", \
++		p, q, winid, NULL \
++	} \
++}
++
++#define INCSEARCH { \
++	.v = (char *[]){ "/bin/sh", "-c", \
++		"dmenu -p \"/\" -r < /dev/null | "\
++		"while read -r find; do "\
++		"  xprop -id $0 -f _SURF_FIND 8s " "-set _SURF_FIND \"$find\";"\
++		"done",\
++		winid, NULL \
++	} \
++}
++
++#define SELNAV { \
++	.v = (char *[]){ "/bin/sh", "-c", \
++		"prop=\"`xprop -id $0 _SURF_HIST" \
++		" | sed -e 's/^.[^\"]*\"//' -e 's/\"$//' -e 's/\\\\\\n/\\n/g'" \
++		" | dmenu -i -l 10`\"" \
++		" && xprop -id $0 -f _SURF_NAV 8s -set _SURF_NAV \"$prop\"", \
++		winid, NULL \
++	} \
++}
++
++/* DOWNLOAD(URI, referer) */
++#define DOWNLOAD(d, r) { \
++	.v = (char *[]){ "/bin/sh", "-c", \
++		 "st -e /bin/sh -c \"curl -L -J -O --user-agent '$1'" \
++		 " --referer '$2' -b $3 -c $3 '$0';" \
++		 " sleep 5;\"", \
++		 d, useragent, r, cookiefile, NULL \
++	} \
++}
++
++/* PLUMB(URI) */
++/* This called when some URI which does not begin with "about:",
++ * "http://" or "https://" should be opened.
++ */
++#define PLUMB(u) {\
++	.v = (char *[]){ "/bin/sh", "-c", \
++		 "xdg-open \"$0\"", u, NULL \
++	} \
++}
++
++/* BM_ADD() */
++#define BM_ADD { .v = (char *[]){ "/bin/sh", "-c", \
++	"(echo `xprop -id $0 _SURF_URI | cut -d '\"' -f 2` && "\
++	"cat ~/.config/surf/bookmarks) | awk '!seen[$0]++' > /tmp/surf-bookmarks_new && "\
++	"dwnotify surf: bookmark added && " \
++	"mv /tmp/surf-bookmarks_new ~/.config/surf/bookmarks", \
++	winid, NULL } }
++
++/* styles */
++/*
++ * The iteration will stop at the first match, beginning at the beginning of
++ * the list.
++ */
++static SiteStyle styles[] = {
++	/* regexp                       file in $styledir */
++	{ ".*",                         "default.css" },
++	{ ".*github.com.*",                 "github.com.css" },
++};
++
++#define MODKEY GDK_CONTROL_MASK
++#define SHIFTK GDK_SHIFT_MASK
++
++/* hotkeys */
++/*
++ * If you use anything else but MODKEY and GDK_SHIFT_MASK, don't forget to
++ * edit the CLEANMASK() macro.
++ */
++static Key keys[] = {
++	/* modifier,     keyval,     function,           arg */
++	{ MODKEY|SHIFTK, GDK_r,      reload,             { .b = TRUE } },
++	{ MODKEY,        GDK_r,      reload,             { .b = FALSE } },
++	{ 0,             GDK_F5,     reload,             { .b = FALSE } },
++	{ MODKEY|SHIFTK, GDK_p,      print,              { 0 } },
++
++	{ MODKEY,        GDK_p,      clipboard,          { .b = TRUE } },
++	{ MODKEY,        GDK_y,      clipboard,          { .b = FALSE } },
++
++	{ MODKEY,        GDK_minus,  zoom,               { .i = -1 } },
++	{ MODKEY,        GDK_equal,  zoom,               { .i = +1 } },
++	{ MODKEY,        GDK_0,      zoom,               { .i = 0  } },
++
++	{ MODKEY,        GDK_l,      navigate,           { .i = +1 } },
++	{ MODKEY,        GDK_h,      navigate,           { .i = -1 } },
++	{ MODKEY|SHIFTK, GDK_h,      selhist,            SELNAV },
++
++	{ MODKEY,        GDK_j,      scroll_v,           { .i = +1 } },
++	{ MODKEY,        GDK_k,      scroll_v,           { .i = -1 } },
++	{ MODKEY,        GDK_b,      scroll_v,           { .i = -10000 } },
++	{ MODKEY,        GDK_space,  scroll_v,           { .i = +10000 } },
++	{ MODKEY,        GDK_i,      scroll_h,           { .i = +1 } },
++	{ MODKEY,        GDK_u,      scroll_h,           { .i = -1 } },
++
++	{ 0,             GDK_Escape, stop,               { 0 } },
++	{ MODKEY,        GDK_o,      source,             { 0 } },
++	{ MODKEY|SHIFTK, GDK_o,      inspector,          { 0 } },
++
++	{ MODKEY,        GDK_g,      spawn,              SETPROP("_SURF_URI",  "_SURF_GO") },
++	{ 0,             GDK_F1,     spawn,              SETPROP("_SURF_URI",  "_SURF_GO") },
++	{ MODKEY,        GDK_slash,  spawn,              INCSEARCH },
++	{ MODKEY,        GDK_m,      spawn,              BM_ADD },
++
++	{ MODKEY,        GDK_n,      find,               { .b = TRUE } },
++	{ MODKEY|SHIFTK, GDK_n,      find,               { .b = FALSE } },
++
++	{ MODKEY|SHIFTK, GDK_c,      toggle,             { .v = "enable-caret-browsing" } },
++	{ MODKEY|SHIFTK, GDK_i,      toggle,             { .v = "auto-load-images" } },
++	{ MODKEY|SHIFTK, GDK_s,      toggle,             { .v = "enable-scripts" } },
++	{ MODKEY|SHIFTK, GDK_v,      toggle,             { .v = "enable-plugins" } },
++	{ MODKEY|SHIFTK, GDK_a,      togglecookiepolicy, { 0 } },
++	{ MODKEY|SHIFTK, GDK_m,      togglestyle,        { 0 } },
++	{ MODKEY|SHIFTK, GDK_b,      togglescrollbars,   { 0 } },
++	{ MODKEY|SHIFTK, GDK_g,      togglegeolocation,  { 0 } },
++};
++
++/* button definitions */
++/* click can be ClkDoc, ClkLink, ClkImg, ClkMedia, ClkSel, ClkEdit, ClkAny */
++static Button buttons[] = {
++	/* click,   event mask,button, function,       argument */
++	{ ClkLink,  0,             2,      linkopenembed,  { 0 } },
++	{ ClkLink,  MODKEY,        2,      linkopen,       { 0 } },
++	{ ClkLink,  MODKEY,        1,      linkopenembed,  { 0 } },
++	{ ClkLink,  MODKEY|SHIFTK, 1,      linkopen,       { 0 } },
++	{ ClkAny,   0,             8,      navigate,       { .i = -1 } },
++	{ ClkAny,   0,             9,      navigate,       { .i = +1 } },
++};
+diff --git a/surf.c b/surf.c
+index 23c49bd..652f53f 100644
+--- a/surf.c
++++ b/surf.c
+@@ -36,7 +36,7 @@ char *argv0;
+ #define COOKIEJAR_TYPE          (cookiejar_get_type ())
+ #define COOKIEJAR(obj)          (G_TYPE_CHECK_INSTANCE_CAST ((obj), COOKIEJAR_TYPE, CookieJar))
+ 
+-enum { AtomFind, AtomGo, AtomUri, AtomLast };
++enum { AtomFind, AtomGo, AtomUri, AtomHist, AtomNav, AtomLast };
+ enum {
+ 	ClkDoc   = WEBKIT_HIT_TEST_RESULT_CONTEXT_DOCUMENT,
+ 	ClkLink  = WEBKIT_HIT_TEST_RESULT_CONTEXT_LINK,
+@@ -177,6 +177,8 @@ static void loadstatuschange(WebKitWebView *view, GParamSpec *pspec,
+                              Client *c);
+ static void loaduri(Client *c, const Arg *arg);
+ static void navigate(Client *c, const Arg *arg);
++static void selhist(Client *c, const Arg *arg);
++static void navhist(Client *c, const Arg *arg);
+ static Client *newclient(void);
+ static void newwindow(Client *c, const Arg *arg, gboolean noembed);
+ static void pasteuri(GtkClipboard *clipboard, const char *text, gpointer d);
+@@ -358,6 +360,7 @@ cleanup(void)
+ 	while (clients)
+ 		destroyclient(clients);
+ 	g_free(cookiefile);
++	g_free(historyfile);
+ 	g_free(scriptfile);
+ 	g_free(stylefile);
+ }
+@@ -851,6 +854,10 @@ loaduri(Client *c, const Arg *arg)
+ 		reload(c, &a);
+ 	} else {
+ 		webkit_web_view_load_uri(c->view, u);
++		FILE *f;
++		f = fopen(historyfile, "a+");
++		fprintf(f, "%s\n", u);
++		fclose(f);
+ 		c->progress = 0;
+ 		c->title = copystr(&c->title, u);
+ 		updatetitle(c);
+@@ -865,6 +872,59 @@ navigate(Client *c, const Arg *arg)
+ 	webkit_web_view_go_back_or_forward(c->view, steps);
+ }
+ 
++static void
++selhist(Client *c, const Arg *arg) {
++	WebKitWebBackForwardList *lst;
++	WebKitWebHistoryItem *cur;
++	gint i;
++	gchar *out;
++	gchar *tmp;
++	gchar *line;
++
++	out = g_strdup("");
++
++	if(!(lst = webkit_web_view_get_back_forward_list(c->view)))
++		return;
++
++	for(i = webkit_web_back_forward_list_get_back_length(lst); i > 0; i--) {
++		if(!(cur = webkit_web_back_forward_list_get_nth_item(lst, -i)))
++			break;
++		line = g_strdup_printf("%d: %s\n", -i,
++		                       webkit_web_history_item_get_original_uri(cur));
++		tmp = g_strconcat(out, line, NULL);
++		g_free(out);
++		out = tmp;
++	}
++
++	if((cur = webkit_web_back_forward_list_get_nth_item(lst, 0))) {
++		line = g_strdup_printf("%d: %s", 0,
++		                       webkit_web_history_item_get_original_uri(cur));
++		tmp = g_strconcat(out, line, NULL);
++		g_free(out);
++		out = tmp;
++	}
++
++	for(i = 1; i <= webkit_web_back_forward_list_get_forward_length(lst); i++) {
++		if(!(cur = webkit_web_back_forward_list_get_nth_item(lst, i)))
++			break;
++		line = g_strdup_printf("\n%d: %s", i,
++		                       webkit_web_history_item_get_original_uri(cur));
++		tmp = g_strconcat(out, line, NULL);
++		g_free(out);
++		out = tmp;
++	}
++
++	setatom(c, AtomHist, out);
++	g_free(out);
++	spawn(c, arg);
++}
++
++static void
++navhist(Client *c, const Arg *arg) {
++	Arg a = { .i = atoi(arg->v) };
++	navigate(c, &a);
++}
++
+ Client *
+ newclient(void)
+ {
+@@ -1064,6 +1124,7 @@ newclient(void)
+ 
+ 	setatom(c, AtomFind, "");
+ 	setatom(c, AtomUri, "about:blank");
++	setatom(c, AtomHist, "");
+ 	if (hidebackground)
+ 		webkit_web_view_set_transparent(c->view, TRUE);
+ 
+@@ -1205,7 +1266,10 @@ processx(GdkXEvent *e, GdkEvent *event, gpointer d)
+ 				arg.v = getatom(c, AtomGo);
+ 				loaduri(c, &arg);
+ 				return GDK_FILTER_REMOVE;
+-			}
++			} else if(ev->atom == atoms[AtomNav]) {
++				arg.v = getatom(c, AtomNav);
++				navhist(c, &arg);
++ 			}
+ 		}
+ 	}
+ 	return GDK_FILTER_CONTINUE;
+@@ -1308,11 +1372,14 @@ setup(void)
+ 	atoms[AtomFind] = XInternAtom(dpy, "_SURF_FIND", False);
+ 	atoms[AtomGo] = XInternAtom(dpy, "_SURF_GO", False);
+ 	atoms[AtomUri] = XInternAtom(dpy, "_SURF_URI", False);
++	atoms[AtomHist] = XInternAtom(dpy, "_SURF_HIST", False);
++	atoms[AtomNav] = XInternAtom(dpy, "_SURF_NAV", False);
+ 
+ 	/* dirs and files */
+ 	cookiefile = buildfile(cookiefile);
+ 	scriptfile = buildfile(scriptfile);
+ 	cachefolder = buildpath(cachefolder);
++	historyfile = buildfile(historyfile);
+ 	if (stylefile == NULL) {
+ 		styledir = buildpath(styledir);
+ 		for (i = 0; i < LENGTH(styles); i++) {
