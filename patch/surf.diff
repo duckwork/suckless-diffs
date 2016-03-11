@@ -45,10 +45,10 @@ index 93a3d49..85e4160 100644
  	{ 0,                    GDK_Escape, stop,       { 0 } },
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..07bb1a7
+index 0000000..7a12760
 --- /dev/null
 +++ b/config.h
-@@ -0,0 +1,171 @@
+@@ -0,0 +1,172 @@
 +/* SURF CONFIG.H */
 +/* modifier 0 means no modifier */
 +static char *useragent   = "Mozilla/5.0 (X11; U; Unix; en-US) "
@@ -91,7 +91,7 @@ index 0000000..07bb1a7
 +#define SETPROP(p, q) { \
 +	.v = (char *[]){ "/bin/sh", "-c", \
 +		"w -setprop $0 $1 $2", \
-+		p, q, winid, NULL \
++		winid, p, q, NULL \
 +	} \
 +}
 +
@@ -118,7 +118,7 @@ index 0000000..07bb1a7
 +/* DOWNLOAD(URI, referer) */
 +#define DOWNLOAD(d, r) { \
 +	.v = (char *[]){ "/bin/sh", "-c", \
-+		 "st -e /bin/sh -c \"curl -L -J -O --user-agent '$1'" \
++		 "st -c surfdl -e /bin/sh -c \"curl -L -J -O --user-agent '$1'" \
 +		 " --referer '$2' -b $3 -c $3 '$0';" \
 +		 " sleep 5;\"", \
 +		 d, useragent, r, cookiefile, NULL \
@@ -179,6 +179,7 @@ index 0000000..07bb1a7
 +	{ MODKEY,        GDK_l,      navigate,           { .i = +1 } },
 +	{ MODKEY,        GDK_h,      navigate,           { .i = -1 } },
 +	{ MODKEY|SHIFTK, GDK_h,      selhist,            SELNAV },
++	{ 0,             GDK_F2,     selhist,            SELNAV },
 +
 +	{ MODKEY,        GDK_j,      scroll_v,           { .i = +1 } },
 +	{ MODKEY,        GDK_k,      scroll_v,           { .i = -1 } },

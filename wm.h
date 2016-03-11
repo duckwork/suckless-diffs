@@ -2,7 +2,8 @@
 
 #define KILLKEY              F10
 
-#define FONT                 "DejaVu Sans Mono:pixelsize=12"
+/* #define FONT                 "DejaVu Sans Mono:pixelsize=12" */
+#define FONT                 "Monoid:pixelsize=10"
 
 #define COLOR_FG             "#f8ecc2"
 #define COLOR_BG             "#584c46"

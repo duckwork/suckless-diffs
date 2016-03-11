@@ -63,10 +63,10 @@ index fd09d72..1a5bd9f 100644
  /*
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..f7fb98e
+index 0000000..1c3aecb
 --- /dev/null
 +++ b/config.h
-@@ -0,0 +1,433 @@
+@@ -0,0 +1,434 @@
 +/* See LICENSE file for copyright and license details. */
 +
 +#include "../wm.h"
@@ -75,7 +75,8 @@ index 0000000..f7fb98e
 + * appearance
 + *
 + */
-+static char font[] = FONT; static int borderpx = 2;
++static char font[] = FONT;
++static int borderpx = 2;
 +#define histsize 2000
 +
 +/*
