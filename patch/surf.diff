@@ -45,10 +45,11 @@ index 93a3d49..85e4160 100644
  	{ 0,                    GDK_Escape, stop,       { 0 } },
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..7a12760
+index 0000000..b4b2bb7
 --- /dev/null
 +++ b/config.h
-@@ -0,0 +1,172 @@
+@@ -0,0 +1,180 @@
++// vim: noshiftround:shiftwidth=4:softtabstop=4:tabstop=4:noexpandtab
 +/* SURF CONFIG.H */
 +/* modifier 0 means no modifier */
 +static char *useragent   = "Mozilla/5.0 (X11; U; Unix; en-US) "
@@ -57,10 +58,9 @@ index 0000000..7a12760
 +static char *scriptfile  = "~/.config/surf/script.js";
 +static char *styledir    = "~/.config/surf/styles/";
 +static char *cachefolder = "~/.cache/surf/cache/";
-+static char *historyfile = "~/.local/share/surf/history";
 +
 +static Bool kioskmode       = FALSE; /* Ignore shortcuts */
-+static Bool showindicators  = TRUE;  /* Show indicators in window title */
++static Bool showindicators  = FALSE;  /* Show indicators in window title */
 +static Bool zoomto96dpi     = TRUE;  /* Zoom pages to always emulate 96dpi */
 +static Bool runinfullscreen = FALSE; /* Run in fullscreen mode by default */
 +
@@ -82,7 +82,7 @@ index 0000000..7a12760
 +static Bool enableinspector       = TRUE;
 +static Bool enableplugins         = TRUE;
 +static Bool enablescripts         = TRUE;
-+static Bool enablescrollbars      = FALSE;
++static Bool enablescrollbars      = TRUE;
 +static Bool enablespatialbrowsing = TRUE;
 +static Bool enablestyle           = TRUE;
 +static Bool hidebackground        = FALSE;
@@ -105,6 +105,13 @@ index 0000000..7a12760
 +	} \
 +}
 +
++#define ONLOAD(u) { \
++	.v = (char *[]){ "/bin/sh", "-c", \
++		"w -addhist \"$0\"", \
++		u, NULL \
++	} \
++}
++
 +#define SELNAV { \
 +	.v = (char *[]){ "/bin/sh", "-c", \
 +		"prop=\"`xprop -id $0 _SURF_HIST" \
@@ -118,7 +125,8 @@ index 0000000..7a12760
 +/* DOWNLOAD(URI, referer) */
 +#define DOWNLOAD(d, r) { \
 +	.v = (char *[]){ "/bin/sh", "-c", \
-+		 "st -c surfdl -e /bin/sh -c \"curl -L -J -O --user-agent '$1'" \
++		 "st -c surfdl -e " \
++		 "/bin/sh -c \"curl -L -J -o '/tmp/dl/$0' --user-agent '$1'" \
 +		 " --referer '$2' -b $3 -c $3 '$0';" \
 +		 " sleep 5;\"", \
 +		 d, useragent, r, cookiefile, NULL \
@@ -151,7 +159,7 @@ index 0000000..7a12760
 +static SiteStyle styles[] = {
 +	/* regexp                       file in $styledir */
 +	{ ".*",                         "default.css" },
-+	{ ".*github.com.*",                 "github.com.css" },
++	{ ".*github.com.*",             "github.com.css" },
 +};
 +
 +#define MODKEY GDK_CONTROL_MASK
@@ -222,7 +230,7 @@ index 0000000..7a12760
 +	{ ClkAny,   0,             9,      navigate,       { .i = +1 } },
 +};
 diff --git a/surf.c b/surf.c
-index 23c49bd..652f53f 100644
+index 23c49bd..51da9f7 100644
 --- a/surf.c
 +++ b/surf.c
 @@ -36,7 +36,7 @@ char *argv0;
@@ -243,26 +251,32 @@ index 23c49bd..652f53f 100644
  static Client *newclient(void);
  static void newwindow(Client *c, const Arg *arg, gboolean noembed);
  static void pasteuri(GtkClipboard *clipboard, const char *text, gpointer d);
-@@ -358,6 +360,7 @@ cleanup(void)
- 	while (clients)
- 		destroyclient(clients);
- 	g_free(cookiefile);
-+	g_free(historyfile);
- 	g_free(scriptfile);
- 	g_free(stylefile);
- }
-@@ -851,6 +854,10 @@ loaduri(Client *c, const Arg *arg)
- 		reload(c, &a);
- 	} else {
- 		webkit_web_view_load_uri(c->view, u);
-+		FILE *f;
-+		f = fopen(historyfile, "a+");
-+		fprintf(f, "%s\n", u);
-+		fclose(f);
- 		c->progress = 0;
- 		c->title = copystr(&c->title, u);
+@@ -791,11 +793,10 @@ loadstatuschange(WebKitWebView *view, GParamSpec *pspec, Client *c)
+ 	WebKitWebDataSource *src;
+ 	WebKitNetworkRequest *request;
+ 	SoupMessage *msg;
+-	char *uri;
++	char *uri = geturi(c);
+ 
+ 	switch (webkit_web_view_get_load_status (c->view)) {
+ 	case WEBKIT_LOAD_COMMITTED:
+-		uri = geturi(c);
+ 		if (strstr(uri, "https://") == uri) {
+ 			frame = webkit_web_view_get_main_frame(c->view);
+ 			src = webkit_web_frame_get_data_source(frame);
+@@ -809,8 +810,9 @@ loadstatuschange(WebKitWebView *view, GParamSpec *pspec, Client *c)
+ 
+ 		if (enablestyle)
+ 			setstyle(c, getstyle(uri));
+-		break;
+-	case WEBKIT_LOAD_FINISHED:
++                break;
++        case WEBKIT_LOAD_FINISHED:
++                spawn(NULL, &(Arg)ONLOAD(uri));
+ 		c->progress = 100;
  		updatetitle(c);
-@@ -865,6 +872,59 @@ navigate(Client *c, const Arg *arg)
+ 		if (diskcache) {
+@@ -865,6 +867,59 @@ navigate(Client *c, const Arg *arg)
  	webkit_web_view_go_back_or_forward(c->view, steps);
  }
  
@@ -322,7 +336,7 @@ index 23c49bd..652f53f 100644
  Client *
  newclient(void)
  {
-@@ -1064,6 +1124,7 @@ newclient(void)
+@@ -1064,6 +1119,7 @@ newclient(void)
  
  	setatom(c, AtomFind, "");
  	setatom(c, AtomUri, "about:blank");
@@ -330,7 +344,7 @@ index 23c49bd..652f53f 100644
  	if (hidebackground)
  		webkit_web_view_set_transparent(c->view, TRUE);
  
-@@ -1205,7 +1266,10 @@ processx(GdkXEvent *e, GdkEvent *event, gpointer d)
+@@ -1205,7 +1261,10 @@ processx(GdkXEvent *e, GdkEvent *event, gpointer d)
  				arg.v = getatom(c, AtomGo);
  				loaduri(c, &arg);
  				return GDK_FILTER_REMOVE;
@@ -342,7 +356,7 @@ index 23c49bd..652f53f 100644
  		}
  	}
  	return GDK_FILTER_CONTINUE;
-@@ -1308,11 +1372,14 @@ setup(void)
+@@ -1308,6 +1367,8 @@ setup(void)
  	atoms[AtomFind] = XInternAtom(dpy, "_SURF_FIND", False);
  	atoms[AtomGo] = XInternAtom(dpy, "_SURF_GO", False);
  	atoms[AtomUri] = XInternAtom(dpy, "_SURF_URI", False);
@@ -351,9 +365,3 @@ index 23c49bd..652f53f 100644
  
  	/* dirs and files */
  	cookiefile = buildfile(cookiefile);
- 	scriptfile = buildfile(scriptfile);
- 	cachefolder = buildpath(cachefolder);
-+	historyfile = buildfile(historyfile);
- 	if (stylefile == NULL) {
- 		styledir = buildpath(styledir);
- 		for (i = 0; i < LENGTH(styles); i++) {
