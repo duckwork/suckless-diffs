@@ -10,7 +10,7 @@ index 0000000..ccaac6b
 +stest
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..9b6e031
+index 0000000..5e5180a
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,30 @@
@@ -29,15 +29,15 @@ index 0000000..9b6e031
 +/* -fn option overrides fonts[0]; default X11 font or font set */
 +static const char *fonts[] = {
 +	FONT,
-+	"monospace:size=10"
++	/* "monospace:size=10", */
 +};
 +static const char *prompt      = NULL;      /* -p  option; prompt to the left of input field */
 +static const char *normbgcolor = COLOR_BLACK; /* -nb option; normal background                 */
-+static const char *normfgcolor = COLOR_FG; /* -nf option; normal foreground                 */
++static const char *normfgcolor = COLOR_GRAY2; /* -nf option; normal foreground                 */
 +static const char *selbgcolor  = COLOR_BLACK; /* -sb option; selected background               */
 +static const char *selfgcolor  = COLOR_YELLOW; /* -sf option; selected foreground               */
-+static const char *outbgcolor  = "#00ffff";
-+static const char *outfgcolor  = "#000000";
++static const char *outbgcolor  = COLOR_BLACK;
++static const char *outfgcolor  = COLOR_FG;
 +
 +/*
 + * Characters not considered part of a word while deleting words
@@ -93,7 +93,7 @@ index d3ab805..681933e 100644
  dmenu is displayed on the monitor number supplied. Monitor numbers are starting
  from 0.
 diff --git a/dmenu.c b/dmenu.c
-index e0c2f80..0af5f89 100644
+index e0c2f80..4fb15d1 100644
 --- a/dmenu.c
 +++ b/dmenu.c
 @@ -37,6 +37,9 @@ struct item {
@@ -106,6 +106,24 @@ index e0c2f80..0af5f89 100644
  static int inputw, promptw;
  static size_t cursor;
  static struct item *items = NULL;
+@@ -78,7 +81,7 @@ calcoffsets(void)
+ 	if (lines > 0)
+ 		n = lines * bh;
+ 	else
+-		n = mw - (promptw + inputw + TEXTW("<") + TEXTW(">"));
++		n = mw - (promptw + inputw + TEXTW("‹") + TEXTW("›"));
+ 	/* calculate which items will begin the next page and previous page */
+ 	for (i = 0, next = curr; next; next = next->right)
+ 		if ((i += (lines > 0) ? bh : MIN(TEXTW(next->text), n)) > n)
+@@ -131,7 +134,7 @@ drawmenu(void)
+ 	}
+ 	/* draw input field */
+ 	w = (lines > 0 || !matches) ? mw - x : inputw;
+-	drw_setscheme(drw, &scheme[SchemeNorm]);
++	drw_setscheme(drw, &scheme[SchemeOut]);
+ 	drw_text(drw, x, 0, w, bh, text, 0);
+ 
+ 	if ((curpos = TEXTNW(text, cursor) + bh / 2 - 2) < w) {
 @@ -141,7 +144,6 @@ drawmenu(void)
  
  	if (lines > 0) {
@@ -114,7 +132,7 @@ index e0c2f80..0af5f89 100644
  		for (item = curr; item != next; item = item->right) {
  			y += h;
  			if (item == sel)
-@@ -151,7 +153,7 @@ drawmenu(void)
+@@ -151,19 +153,19 @@ drawmenu(void)
  			else
  				drw_setscheme(drw, &scheme[SchemeNorm]);
  
@@ -123,6 +141,35 @@ index e0c2f80..0af5f89 100644
  		}
  	} else if (matches) {
  		/* draw horizontal list */
+ 		x += inputw;
+-		w = TEXTW("<");
++		w = TEXTW("‹");
+ 		if (curr->left) {
+ 			drw_setscheme(drw, &scheme[SchemeNorm]);
+-			drw_text(drw, x, 0, w, bh, "<", 0);
++			drw_text(drw, x, 0, w, bh, "‹", 0);
+ 		}
+ 		for (item = curr; item != next; item = item->right) {
+ 			x += w;
+-			w = MIN(TEXTW(item->text), mw - x - TEXTW(">"));
++			w = MIN(TEXTW(item->text), mw - x - TEXTW("›"));
+ 
+ 			if (item == sel)
+ 				drw_setscheme(drw, &scheme[SchemeSel]);
+@@ -173,11 +175,11 @@ drawmenu(void)
+ 				drw_setscheme(drw, &scheme[SchemeNorm]);
+ 			drw_text(drw, x, 0, w, bh, item->text, 0);
+ 		}
+-		w = TEXTW(">");
++		w = TEXTW("›");
+ 		x = mw - w;
+ 		if (next) {
+ 			drw_setscheme(drw, &scheme[SchemeNorm]);
+-			drw_text(drw, x, 0, w, bh, ">", 0);
++			drw_text(drw, x, 0, w, bh, "›", 0);
+ 		}
+ 	}
+ 	drw_map(drw, win, 0, 0, mw, mh);
 @@ -250,6 +252,11 @@ match(void)
  		matchend = substrend;
  	}
@@ -223,7 +270,7 @@ index e0c2f80..0af5f89 100644
 +	else if(matches) {
 +		/* left-click on left arrow */
 +		xpos += inputw;
-+		wpos = TEXTW("<");
++		wpos = TEXTW("‹");
 +		if(prev && curr->left) {
 +			if(ev->x >= xpos && ev->x <= xpos + wpos) {
 +				sel = curr = prev;
@@ -235,7 +282,7 @@ index e0c2f80..0af5f89 100644
 +		/* horizontal list: (ctrl-)left-click on item */
 +		for(item = curr; item != next; item = item->right) {
 +			xpos += wpos;
-+			wpos = MIN(TEXTW(item->text), mw - xpos - TEXTW(">"));
++			wpos = MIN(TEXTW(item->text), mw - xpos - TEXTW("›"));
 +			if(ev->x >= xpos && ev->x <= (xpos + wpos)) {
 +				puts(item->text);
 +				sel=item;
@@ -251,7 +298,7 @@ index e0c2f80..0af5f89 100644
 +			}
 +		}
 +		/* left-click on right arrow */
-+		wpos = TEXTW(">");
++		wpos = TEXTW("›");
 +		xpos = mw - wpos;
 +		if(next && ev->x >= xpos && ev->x <= xpos + wpos) {
 +			sel = curr = next;
