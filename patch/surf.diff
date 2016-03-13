@@ -45,10 +45,10 @@ index 93a3d49..85e4160 100644
  	{ 0,                    GDK_Escape, stop,       { 0 } },
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..b4b2bb7
+index 0000000..3b2a56f
 --- /dev/null
 +++ b/config.h
-@@ -0,0 +1,180 @@
+@@ -0,0 +1,181 @@
 +// vim: noshiftround:shiftwidth=4:softtabstop=4:tabstop=4:noexpandtab
 +/* SURF CONFIG.H */
 +/* modifier 0 means no modifier */
@@ -172,8 +172,9 @@ index 0000000..b4b2bb7
 + */
 +static Key keys[] = {
 +	/* modifier,     keyval,     function,           arg */
-+	{ MODKEY|SHIFTK, GDK_r,      reload,             { .b = TRUE } },
-+	{ MODKEY,        GDK_r,      reload,             { .b = FALSE } },
++	/* { MODKEY|SHIFTK, GDK_r,      reload,             { .b = TRUE } }, */
++	/* { MODKEY,        GDK_r,      reload,             { .b = FALSE } }, */
++	{ SHIFTK,        GDK_F5,     reload,             { .b = TRUE } },
 +	{ 0,             GDK_F5,     reload,             { .b = FALSE } },
 +	{ MODKEY|SHIFTK, GDK_p,      print,              { 0 } },
 +

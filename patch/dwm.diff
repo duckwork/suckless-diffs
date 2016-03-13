@@ -8,7 +8,7 @@ index 0000000..095e840
 +dwm
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..bd51e05
+index 0000000..4f2a6bd
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,149 @@
@@ -113,10 +113,10 @@ index 0000000..bd51e05
 +	{ MODKEY,        XK_k,            focusstack,     {.i = -1 } },
 +	{ MODKEY|SHIFTK, XK_j,            pushdown,       {0} },
 +	{ MODKEY|SHIFTK, XK_k,            pushup,         {0} },
-+	{ MODKEY,        XK_bracketright, incnmaster,     {.i = -1 } },
-+	{ MODKEY,        XK_bracketleft,  incnmaster,     {.i = +1 } },
-+	{ MODKEY,        XK_h,            setmfact,       {.f = -0.05} },
-+	{ MODKEY,        XK_l,            setmfact,       {.f = +0.05} },
++	{ MODKEY|SHIFTK, XK_bracketleft,  incnmaster,     {.i = -1 } },
++	{ MODKEY|SHIFTK, XK_bracketright, incnmaster,     {.i = +1 } },
++	{ MODKEY,        XK_bracketleft,  setmfact,       {.f = -0.05} },
++	{ MODKEY,        XK_bracketright, setmfact,       {.f = +0.05} },
 +	{ MODKEY,        XK_m,            zoom,           {0} },
 +	{ MODKEY,        XK_Tab,          view,           {0} },
 +	{ MODKEY,        XK_n,            nametag,        {0} },
