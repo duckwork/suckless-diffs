@@ -9,7 +9,7 @@ index 0000000..fa096c1
 +xembed
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..e3eed89
+index 0000000..7b6b427
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,93 @@
@@ -37,7 +37,7 @@ index 0000000..e3eed89
 + * then the current position is changed + newposition. If npisrelative
 + * is False, then newposition is an absolute position.
 + */
-+static int  newposition   = 1;
++static int  newposition   = -1;
 +static Bool npisrelative  = True;
 +
 +#define SETPROP(p) { \
