@@ -9,7 +9,7 @@ index 0000000..fa096c1
 +xembed
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..7b6b427
+index 0000000..7f20c95
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,93 @@
@@ -18,7 +18,7 @@ index 0000000..7b6b427
 +#include "../wm.h"
 +
 +/* appearance */
-+static const char font[]		= FONT;
++static const char font[]		= PFONT;
 +static const char* normbgcolor	= COLOR_BLACK;
 +static const char* normfgcolor	= COLOR_GRAY2;
 +static const char* selbgcolor	= COLOR_BLACK;
