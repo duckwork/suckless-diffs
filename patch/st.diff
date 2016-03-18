@@ -63,7 +63,7 @@ index fd09d72..1a5bd9f 100644
  /*
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..1c3aecb
+index 0000000..17a258f
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,434 @@
@@ -125,7 +125,7 @@ index 0000000..1c3aecb
 +/*
 + * thickness of underline and bar cursors
 + */
-+static unsigned int cursorthickness = 2;
++static unsigned int cursorthickness = 1;
 +
 +/*
 + * bell volume. It must be a value between -100 and 100. Use 0 for disabling
@@ -178,8 +178,8 @@ index 0000000..1c3aecb
 + */
 +static unsigned int defaultfg = 256;
 +static unsigned int defaultbg = 257;
-+static unsigned int defaultcs = 258;
-+static unsigned int defaultrcs = 259;
++static unsigned int defaultcs = 256;
++static unsigned int defaultrcs = 257;
 +
 +/*
 + * Default shape of cursor
@@ -188,7 +188,7 @@ index 0000000..1c3aecb
 + * 6: Bar ("|")
 + * 7: Snowman ("☃")
 + */
-+static unsigned int cursorshape = 2;
++static unsigned int cursorshape = 6;
 +
 +/*
 + * Default colour and shape of the mouse cursor
