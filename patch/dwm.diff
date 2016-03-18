@@ -8,7 +8,7 @@ index 0000000..095e840
 +dwm
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..e07bd91
+index 0000000..0dff925
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,155 @@
@@ -65,7 +65,7 @@ index 0000000..e07bd91
 +/* layout(s) */
 +static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
 +static const int nmaster     = 1;    /* number of clients in master area */
-+static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
++static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
 +
 +static const Layout layouts[] = {
 +	/* symbol     arrange function */
