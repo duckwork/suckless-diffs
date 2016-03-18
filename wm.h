@@ -2,7 +2,7 @@
 
 #define KILLKEY              F10
 
-#define FONT                 "monospace:pixelsize=12"
+#define FONT                 "monospace:pixelsize=13"
 /* #define FONT                 "Source Code Pro:pixelsize=12" */
 #define PFONT                "Tamsyn:pixelsize=12"
 #define ICFN                 "Siji:pixelsize=10"
