@@ -8,7 +8,7 @@ index 0000000..095e840
 +dwm
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..3e79028
+index 0000000..73e9b3f
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,151 @@
@@ -50,17 +50,17 @@ index 0000000..3e79028
 +	 *	WM_NAME(STRING) = title
 +	 */
 +	/* class    instance       title       tags mask     isfloating   monitor */
-+	/* Web on 2 */
++	/* media on 2 */
 +	{ NULL,      "tabbed-surf", NULL,       1 << 1,       0,           -1 },
 +	{ NULL,      "surf",        NULL,       1 << 1,       0,           -1 },
 +	{ "surfdl",  NULL,          NULL,       0,            1,           -1 },
-+	{ "mutt",    NULL,          NULL,       1 << 1,       0,           -1 },
-+	/* Media on 3 */
-+	{ "ncmpcpp", NULL,          NULL,       1 << 2,       0,           -1 },
-+	/* Documents etc. on 4 */
 +	{ "ranger",  NULL,          NULL,       1 << 3,       0,           -1 },
++	{ "ncmpcpp", NULL,          NULL,       1 << 2,       0,           -1 },
++	/* communication on 3 */
++	{ "mutt",    NULL,          NULL,       1 << 1,       0,           -1 },
++	/* Documents etc. on 4 */
 +	{ "Gimp",    NULL,          NULL,       1 << 3,       1,           -1 },
-+	/* Floating */
++	/* Floating anywhere */
 +	{ "Xfd",     "xfd",         NULL,       0,            1,           -1 },
 +};
 +

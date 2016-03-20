@@ -63,7 +63,7 @@ index fd09d72..1a5bd9f 100644
  /*
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..17a258f
+index 0000000..3b13646
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,434 @@
@@ -76,7 +76,7 @@ index 0000000..17a258f
 + *
 + */
 +static char font[] = FONT;
-+static int borderpx = 2;
++static int borderpx = 4;
 +#define histsize 2000
 +
 +/*
@@ -188,7 +188,7 @@ index 0000000..17a258f
 + * 6: Bar ("|")
 + * 7: Snowman ("☃")
 + */
-+static unsigned int cursorshape = 6;
++static unsigned int cursorshape = 2;
 +
 +/*
 + * Default colour and shape of the mouse cursor
