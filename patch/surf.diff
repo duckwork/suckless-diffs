@@ -45,7 +45,7 @@ index 93a3d49..85e4160 100644
  	{ 0,                    GDK_Escape, stop,       { 0 } },
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..a679d39
+index 0000000..81b38af
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,182 @@
@@ -75,13 +75,13 @@ index 0000000..a679d39
 +static time_t sessiontime = 3600;
 +
 +/* Webkit default features */
-+static Bool allowgeolocation      = TRUE;
++static Bool allowgeolocation      = FALSE;
 +static Bool enablediskcache       = TRUE;
 +static int  diskcachebytes        = 5 * 1024 * 1024;
 +static Bool enableinspector       = TRUE;
 +static Bool enableplugins         = TRUE;
 +static Bool enablescripts         = TRUE;
-+static Bool enablescrollbars      = TRUE;
++static Bool enablescrollbars      = FALSE;
 +static Bool enablespatialbrowsing = TRUE;
 +static Bool enablestyle           = TRUE;
 +static Bool hidebackground        = FALSE;
