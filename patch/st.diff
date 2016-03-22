@@ -63,7 +63,7 @@ index fd09d72..1a5bd9f 100644
  /*
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..3b13646
+index 0000000..daf41f7
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,434 @@
@@ -178,8 +178,8 @@ index 0000000..3b13646
 + */
 +static unsigned int defaultfg = 256;
 +static unsigned int defaultbg = 257;
-+static unsigned int defaultcs = 256;
-+static unsigned int defaultrcs = 257;
++static unsigned int defaultcs = 258;
++static unsigned int defaultrcs = 259;
 +
 +/*
 + * Default shape of cursor
