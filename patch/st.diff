@@ -7,7 +7,7 @@ index 0000000..c5cc104
 +*.o
 +st
 diff --git a/config.def.h b/config.def.h
-index fd09d72..1a5bd9f 100644
+index 9e61010..96fa010 100644
 --- a/config.def.h
 +++ b/config.def.h
 @@ -7,6 +7,7 @@
@@ -63,10 +63,10 @@ index fd09d72..1a5bd9f 100644
  /*
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..daf41f7
+index 0000000..9dc32fd
 --- /dev/null
 +++ b/config.h
-@@ -0,0 +1,434 @@
+@@ -0,0 +1,442 @@
 +/* See LICENSE file for copyright and license details. */
 +
 +#include "../wm.h"
@@ -125,7 +125,7 @@ index 0000000..daf41f7
 +/*
 + * thickness of underline and bar cursors
 + */
-+static unsigned int cursorthickness = 1;
++static unsigned int cursorthickness = 2;
 +
 +/*
 + * bell volume. It must be a value between -100 and 100. Use 0 for disabling
@@ -163,10 +163,10 @@ index 0000000..daf41f7
 +	[255] = 0,
 +
 +	/* more colors can be added after 255 to use with DefaultXX */
-+	COLOR_FG, // 256
-+	COLOR_BG, // 257
-+	"#cccccc",  // 258
-+	"#555555",  // 259
++	COLOR_FG,     // 256 -- defaultfg
++	COLOR_BG,     // 257 -- defaultbg
++	COLOR_GRAY2,  // 258 -- defaultcs
++	"#555555",    // 259 -- defaultrcs
 +};
 +
 +/* bg opacity */
@@ -500,6 +500,14 @@ index 0000000..daf41f7
 +static uint selmasks[] = {
 +	[SEL_RECTANGULAR] = Mod1Mask,
 +};
++/*
++ * Printable characters in ASCII, used to estimate the advance width
++ * of single wide characters.
++ */
++static char ascii_printable[] =
++	" !\"#$%&'()*+,-./0123456789:;<=>?"
++	"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
++	"`abcdefghijklmnopqrstuvwxyz{|}~";
 +
 diff --git a/config.mk b/config.mk
 index 81e3e47..ab35200 100644
@@ -515,7 +523,7 @@ index 81e3e47..ab35200 100644
         `pkg-config --libs freetype2`
  
 diff --git a/st.c b/st.c
-index 0536b6f..ce30097 100644
+index 839136d..8226b49 100644
 --- a/st.c
 +++ b/st.c
 @@ -61,6 +61,7 @@ char *argv0;
@@ -526,7 +534,7 @@ index 0536b6f..ce30097 100644
  
  /* macros */
  #define MIN(a, b)		((a) < (b) ? (a) : (b))
-@@ -79,12 +80,15 @@ char *argv0;
+@@ -80,12 +81,15 @@ char *argv0;
  #define TIMEDIFF(t1, t2)	((t1.tv_sec-t2.tv_sec)*1000 + \
  				(t1.tv_nsec-t2.tv_nsec)/1E6)
  #define MODBIT(x, set, bit)	((set) ? ((x) |= (bit)) : ((x) &= ~(bit)))
@@ -542,7 +550,7 @@ index 0536b6f..ce30097 100644
  
  
  enum glyph_attribute {
-@@ -227,26 +231,6 @@ typedef struct {
+@@ -228,26 +232,6 @@ typedef struct {
  	int narg;              /* nb of args */
  } STREscape;
  
@@ -569,7 +577,7 @@ index 0536b6f..ce30097 100644
  /* Purely graphic info */
  typedef struct {
  	Display *dpy;
-@@ -267,6 +251,7 @@ typedef struct {
+@@ -268,6 +252,7 @@ typedef struct {
  	int w, h; /* window width and height */
  	int ch; /* char height */
  	int cw; /* char width  */
@@ -577,7 +585,7 @@ index 0536b6f..ce30097 100644
  	char state; /* focus, redraw, visible */
  	int cursor; /* cursor style */
  } XWindow;
-@@ -317,6 +302,13 @@ typedef union {
+@@ -318,6 +303,13 @@ typedef union {
  } Arg;
  
  typedef struct {
@@ -591,7 +599,7 @@ index 0536b6f..ce30097 100644
  	uint mod;
  	KeySym keysym;
  	void (*func)(const Arg *);
-@@ -326,6 +318,8 @@ typedef struct {
+@@ -327,6 +319,8 @@ typedef struct {
  /* function definitions used in config.h */
  static void clipcopy(const Arg *);
  static void clippaste(const Arg *);
@@ -600,7 +608,7 @@ index 0536b6f..ce30097 100644
  static void numlock(const Arg *);
  static void selpaste(const Arg *);
  static void xzoom(const Arg *);
-@@ -335,6 +329,7 @@ static void printsel(const Arg *);
+@@ -336,6 +330,7 @@ static void printsel(const Arg *);
  static void printscreen(const Arg *) ;
  static void toggleprinter(const Arg *);
  static void sendbreak(const Arg *);
@@ -608,7 +616,7 @@ index 0536b6f..ce30097 100644
  
  /* Config.h for applying patches and the configuration. */
  #include "config.h"
-@@ -359,6 +354,29 @@ typedef struct {
+@@ -360,6 +355,29 @@ typedef struct {
  	GC gc;
  } DC;
  
@@ -638,7 +646,7 @@ index 0536b6f..ce30097 100644
  static void die(const char *, ...);
  static void draw(void);
  static void redraw(void);
-@@ -398,8 +416,8 @@ static void tputtab(int);
+@@ -399,8 +417,8 @@ static void tputtab(int);
  static void tputc(Rune);
  static void treset(void);
  static void tresize(int, int);
@@ -1020,7 +1028,7 @@ index 0536b6f..ce30097 100644
  	loaded = 1;
  }
  
-@@ -3453,7 +3605,38 @@ xinit(void)
+@@ -3447,7 +3599,38 @@ xinit(void)
  	if (!(xw.dpy = XOpenDisplay(NULL)))
  		die("Can't open display\n");
  	xw.scr = XDefaultScreen(xw.dpy);
@@ -1060,7 +1068,7 @@ index 0536b6f..ce30097 100644
  
  	/* font */
  	if (!FcInit())
-@@ -3463,7 +3646,10 @@ xinit(void)
+@@ -3457,7 +3640,10 @@ xinit(void)
  	xloadfonts(usedfont, 0);
  
  	/* colors */
@@ -1072,7 +1080,7 @@ index 0536b6f..ce30097 100644
  	xloadcols();
  
  	/* adjust fixed window geometry */
-@@ -3486,16 +3672,17 @@ xinit(void)
+@@ -3480,16 +3666,17 @@ xinit(void)
  	if (!(opt_embed && (parent = strtol(opt_embed, NULL, 0))))
  		parent = XRootWindow(xw.dpy, xw.scr);
  	xw.win = XCreateWindow(xw.dpy, parent, xw.l, xw.t,
@@ -1094,7 +1102,7 @@ index 0536b6f..ce30097 100644
  	XSetForeground(xw.dpy, dc.gc, dc.col[defaultbg].pixel);
  	XFillRectangle(xw.dpy, xw.buf, dc.gc, 0, 0, xw.w, xw.h);
  
-@@ -3987,11 +4174,11 @@ drawregion(int x1, int y1, int x2, int y2)
+@@ -3980,11 +4167,11 @@ drawregion(int x1, int y1, int x2, int y2)
  		term.dirty[y] = 0;
  
  		specs = term.specbuf;
@@ -1108,7 +1116,7 @@ index 0536b6f..ce30097 100644
  			if (new.mode == ATTR_WDUMMY)
  				continue;
  			if (ena_sel && selected(x, y))
-@@ -4011,7 +4198,8 @@ drawregion(int x1, int y1, int x2, int y2)
+@@ -4004,7 +4191,8 @@ drawregion(int x1, int y1, int x2, int y2)
  		if (i > 0)
  			xdrawglyphfontspecs(specs, base, i, ox, y);
  	}
