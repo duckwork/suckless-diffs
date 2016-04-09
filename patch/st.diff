@@ -63,10 +63,10 @@ index 9e61010..96fa010 100644
  /*
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..850cd53
+index 0000000..07b1ac7
 --- /dev/null
 +++ b/config.h
-@@ -0,0 +1,515 @@
+@@ -0,0 +1,521 @@
 +// Config file for Suckless's st terminal emulator.
 +
 +/*
@@ -75,7 +75,9 @@ index 0000000..850cd53
 + * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
 + */
 +
-+static char font[] = "monospace:size=12";
++#include "../wm.h"
++
++static char font[] = FONT;
 +static int borderpx = 4;
 +static const int alpha = 0xff;
 +
@@ -97,7 +99,7 @@ index 0000000..850cd53
 +static char vtiden[] = "\033[?6c";
 +
 +/* Kerning / character bounding-box multipliers */
-+static float cwscale = 1.0;
++static float cwscale = 0.7;
 +static float chscale = 1.0;
 +
 +/*
@@ -142,54 +144,58 @@ index 0000000..850cd53
 +
 +
 +static const char *colorname_dark[] = {
-+	/* solarized dark */
-+	"#073642",  /*  0: black    */
-+	"#dc322f",  /*  1: red      */
-+	"#859900",  /*  2: green    */
-+	"#b58900",  /*  3: yellow   */
-+	"#268bd2",  /*  4: blue     */
-+	"#d33682",  /*  5: magenta  */
-+	"#2aa198",  /*  6: cyan     */
-+	"#eee8d5",  /*  7: white    */
-+	"#002b36",  /*  8: brblack  */
-+	"#cb4b16",  /*  9: brred    */
-+	"#586e75",  /* 10: brgreen  */
-+	"#657b83",  /* 11: bryellow */
-+	"#839496",  /* 12: brblue   */
-+	"#6c71c4",  /* 13: brmagenta*/
-+	"#93a1a1",  /* 14: brcyan   */
-+	"#fdf6e3",  /* 15: brwhite  */
++	/* nirvana dark */
++	COLOR_BLACK,
++	COLOR_RED,
++	COLOR_GREEN,
++	COLOR_YELLOW,
++	COLOR_BLUE,
++	COLOR_MAGENTA,
++	COLOR_CYAN,
++	COLOR_GRAY1,
++	COLOR_GRAY2,
++	COLOR_RED_BRIGHT,
++	COLOR_GREEN_BRIGHT,
++	COLOR_YELLOW_BRIGHT,
++	COLOR_BLUE_BRIGHT,
++	COLOR_MAGENTA_BRIGHT,
++	COLOR_CYAN_BRIGHT,
++	COLOR_WHITE,
 +
 +	[255] = 0,
 +
 +	/* more colors can be added after 255 to use with DefaultXX */
 +	"#cccccc",
++	COLOR_FG,
++	COLOR_BG,
 +};
 +
 +static const char *colorname_light[] = {
-+	/* solarized light */
-+	"#eee8d5",  /*  0: black    */
-+	"#dc322f",  /*  1: red      */
-+	"#859900",  /*  2: green    */
-+	"#b58900",  /*  3: yellow   */
-+	"#268bd2",  /*  4: blue     */
-+	"#d33682",  /*  5: magenta  */
-+	"#2aa198",  /*  6: cyan     */
-+	"#073642",  /*  7: white    */
-+	"#fdf6e3",  /*  8: brblack  */
-+	"#cb4b16",  /*  9: brred    */
-+	"#93a1a1",  /* 10: brgreen  */
-+	"#839496",  /* 11: bryellow */
-+	"#657b83",  /* 12: brblue   */
-+	"#6c71c4",  /* 13: brmagenta*/
-+	"#586e75",  /* 14: brcyan   */
-+	"#002b36",  /* 15: brwhite  */
++	/* nirvana dark */
++	COLOR_WHITE,
++	COLOR_RED_BRIGHT,
++	COLOR_GREEN_BRIGHT,
++	COLOR_YELLOW_BRIGHT,
++	COLOR_BLUE_BRIGHT,
++	COLOR_MAGENTA_BRIGHT,
++	COLOR_CYAN_BRIGHT,
++	COLOR_GRAY2,
++	COLOR_GRAY1,
++	COLOR_RED,
++	COLOR_GREEN,
++	COLOR_YELLOW,
++	COLOR_BLUE,
++	COLOR_MAGENTA,
++	COLOR_CYAN,
++	COLOR_BLACK,
 +
 +	[255] = 0,
 +
 +	/* more colors can be added after 255 to use with DefaultXX */
++	/* TODO: patch checkcolor() to make this work */
 +	"#cccccc",
-+
++	COLOR_BG,
++	COLOR_FG,
 +};
 +
 +/* Terminal colors (16 first used in escape sequence) */
@@ -201,10 +207,10 @@ index 0000000..850cd53
 + * Default colors (colorname index)
 + * foreground, background, cursor
 + */
-+static unsigned int defaultfg = 12;
-+static unsigned int defaultbg = 8;
-+static unsigned int defaultcs = 14;
-+static unsigned int defaultrcs = 14;
++static unsigned int defaultfg = 15;
++static unsigned int defaultbg = 0;
++static unsigned int defaultcs = 8;
++static unsigned int defaultrcs = 7;
 +
 +/*
 + * Default shape of cursor
@@ -303,7 +309,7 @@ index 0000000..850cd53
 +
 +static Shortcut shortcuts[] = {
 +	/* mask                 keysym          function        argument */
-+	/* { XK_ANY_MOD,           XK_Break,       sendbreak,      {.i =  0} }, */
++	{ XK_ANY_MOD,           XK_Break,       sendbreak,      {.i =  0} },
 +	{ ControlMask,          XK_Print,       toggleprinter,  {.i =  0} },
 +	{ ShiftMask,            XK_Print,       printscreen,    {.i =  0} },
 +	{ XK_ANY_MOD,           XK_Print,       printsel,       {.i =  0} },

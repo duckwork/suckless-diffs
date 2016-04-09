@@ -2,7 +2,8 @@
 
 #define KILLKEY              F10
 
-#define FONT                 "monospace:size=10:antialias=true:autohint=true"
+/* #define FONT                 "monospace:size=10:antialias=true:autohint=true" */
+#define FONT                 "Hack:style=Regular:size=10"
 #define PFONT                "monospace:size=9"
 
 #define COLOR_BLACK          "#221e1f"
