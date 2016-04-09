@@ -10,7 +10,7 @@ index 0000000..ccaac6b
 +stest
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..e773f33
+index 0000000..f0e98c8
 --- /dev/null
 +++ b/config.h
 @@ -0,0 +1,30 @@
@@ -28,8 +28,8 @@ index 0000000..e773f33
 +static unsigned int lines = 0;
 +/* -fn option overrides fonts[0]; default X11 font or font set */
 +static const char *fonts[] = {
-+	FONT,
 +	PFONT,
++	FONT,
 +};
 +static const char *prompt      = NULL;      /* -p  option; prompt to the left of input field */
 +static const char *normbgcolor = COLOR_BLACK; /* -nb option; normal background                 */
