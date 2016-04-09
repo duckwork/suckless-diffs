@@ -8,10 +8,10 @@ index 0000000..095e840
 +dwm
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..7c72fc0
+index 0000000..b8c0e30
 --- /dev/null
 +++ b/config.h
-@@ -0,0 +1,150 @@
+@@ -0,0 +1,152 @@
 +/* See LICENSE file for copyright and license details. */
 +
 +#include "../wm.h"
@@ -29,12 +29,14 @@ index 0000000..7c72fc0
 +static const char selfgcolor[]      = COLOR_BLUE;
 +static const char urgbordercolor[]  = COLOR_RED;
 +static const unsigned int borderpx  = 3;    // border pixel of windows
++static const unsigned long normborderopacity = 0x00000000;
++static const unsigned long selborderopacity = 0xFF000000;
 +static const unsigned int snap      = 32;   // snap pixel
 +static const int showbar            = 1;    // 0 means no bar
 +static const int topbar             = 1;    // 0 means bottom bar
 +static const int viewontag          = 1;    // Switch view on tag switch
 +static const double defaultopacity  = 1.00; // 0.0 - 1.0
-+static const unsigned int gappx     = 9;    // pixel-gap between windows
++static const unsigned int gappx     = 0;    // pixel-gap between windows
 +
 +/* tagging */
 +#define TAG_PREPEND "%1i:"
@@ -163,7 +165,7 @@ index 0000000..7c72fc0
 +	setlayout((selmon->lt[selmon->sellt] == arg->v) ? &a : arg);
 +}
 diff --git a/dwm.c b/dwm.c
-index ff7e096..4d2189e 100644
+index ff7e096..20448be 100644
 --- a/dwm.c
 +++ b/dwm.c
 @@ -11,7 +11,7 @@
@@ -616,10 +618,12 @@ index ff7e096..4d2189e 100644
  focus(Client *c)
  {
  	if (!c || !ISVISIBLE(c))
-@@ -813,6 +967,7 @@ focus(Client *c)
+@@ -812,7 +966,8 @@ focus(Client *c)
+ 		detachstack(c);
  		attachstack(c);
  		grabbuttons(c, 1);
- 		XSetWindowBorder(dpy, c->win, scheme[SchemeSel].border->pix);
+-		XSetWindowBorder(dpy, c->win, scheme[SchemeSel].border->pix);
++		XSetWindowBorder(dpy, c->win, scheme[SchemeSel].border->pix + selborderopacity);
 +		shadowfloat(c);
  		setfocus(c);
  	} else {
@@ -784,7 +788,7 @@ index ff7e096..4d2189e 100644
  	updatetitle(c);
  	if (XGetTransientForHint(dpy, w, &trans) && (t = wintoclient(trans))) {
  		c->mon = t->mon;
-@@ -1065,7 +1315,7 @@ manage(Window w, XWindowAttributes *wa)
+@@ -1065,26 +1315,31 @@ manage(Window w, XWindowAttributes *wa)
  	c->x = MAX(c->x, c->mon->mx);
  	/* only fix client y-offset, if the client center might cover the bar */
  	c->y = MAX(c->y, ((c->mon->by == c->mon->my) && (c->x + (c->w / 2) >= c->mon->wx)
@@ -793,7 +797,10 @@ index ff7e096..4d2189e 100644
  	c->bw = borderpx;
  
  	wc.border_width = c->bw;
-@@ -1075,16 +1325,21 @@ manage(Window w, XWindowAttributes *wa)
+ 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
+-	XSetWindowBorder(dpy, w, scheme[SchemeNorm].border->pix);
++	XSetWindowBorder(dpy, w, scheme[SchemeNorm].border->pix + normborderopacity);
+ 	configure(c); /* propagates border_width, if size doesn't change */
  	updatewindowtype(c);
  	updatesizehints(c);
  	updatewmhints(c);
@@ -1266,6 +1273,15 @@ index ff7e096..4d2189e 100644
  		focus(NULL);
  		arrange(selmon);
  	}
+@@ -1750,7 +2207,7 @@ unfocus(Client *c, int setfocus)
+ 	if (!c)
+ 		return;
+ 	grabbuttons(c, 0);
+-	XSetWindowBorder(dpy, c->win, scheme[SchemeNorm].border->pix);
++	XSetWindowBorder(dpy, c->win, scheme[SchemeNorm].border->pix + normborderopacity);
+ 	if (setfocus) {
+ 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
+ 		XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
 @@ -1806,15 +2263,20 @@ updatebars(void)
  		.background_pixmap = ParentRelative,
  		.event_mask = ButtonPressMask|ExposureMask
@@ -1345,7 +1361,7 @@ index ff7e096..4d2189e 100644
 +		} else {
  			c->isurgent = (wmh->flags & XUrgencyHint) ? 1 : 0;
 +			if (c->isurgent)
-+				XSetWindowBorder(dpy, c->win, scheme[SchemeUrg].border->pix);
++				XSetWindowBorder(dpy, c->win, scheme[SchemeUrg].border->pix + selborderopacity);
 +		}
  		if (wmh->flags & InputHint)
  			c->neverfocus = !wmh->input;
