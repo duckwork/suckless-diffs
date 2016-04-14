@@ -63,24 +63,20 @@ index 9e61010..96fa010 100644
  /*
 diff --git a/config.h b/config.h
 new file mode 100644
-index 0000000..07b1ac7
+index 0000000..aa291cb
 --- /dev/null
 +++ b/config.h
-@@ -0,0 +1,521 @@
-+// Config file for Suckless's st terminal emulator.
+@@ -0,0 +1,442 @@
++/* See LICENSE file for copyright and license details. */
++
++#include "../wm.h"
 +
 +/*
 + * appearance
 + *
-+ * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
 + */
-+
-+#include "../wm.h"
-+
 +static char font[] = FONT;
 +static int borderpx = 4;
-+static const int alpha = 0xff;
-+
 +#define histsize 2000
 +
 +/*
@@ -107,7 +103,7 @@ index 0000000..07b1ac7
 + *
 + * More advanced example: " `'\"()[]{}"
 + */
-+static char worddelimiters[] = " `'\"()[]{}";
++static char worddelimiters[] = " ";
 +
 +/* selection timeouts (in milliseconds) */
 +static unsigned int doubleclicktimeout = 300;
@@ -129,7 +125,7 @@ index 0000000..07b1ac7
 +/*
 + * thickness of underline and bar cursors
 + */
-+static unsigned int cursorthickness = 2;
++static unsigned int cursorthickness = 1;
 +
 +/*
 + * bell volume. It must be a value between -100 and 100. Use 0 for disabling
@@ -142,75 +138,48 @@ index 0000000..07b1ac7
 +
 +static unsigned int tabspaces = 8;
 +
-+
-+static const char *colorname_dark[] = {
-+	/* nirvana dark */
-+	COLOR_BLACK,
-+	COLOR_RED,
-+	COLOR_GREEN,
-+	COLOR_YELLOW,
-+	COLOR_BLUE,
-+	COLOR_MAGENTA,
-+	COLOR_CYAN,
-+	COLOR_GRAY1,
-+	COLOR_GRAY2,
-+	COLOR_RED_BRIGHT,
-+	COLOR_GREEN_BRIGHT,
-+	COLOR_YELLOW_BRIGHT,
-+	COLOR_BLUE_BRIGHT,
-+	COLOR_MAGENTA_BRIGHT,
-+	COLOR_CYAN_BRIGHT,
-+	COLOR_WHITE,
-+
-+	[255] = 0,
-+
-+	/* more colors can be added after 255 to use with DefaultXX */
-+	"#cccccc",
-+	COLOR_FG,
-+	COLOR_BG,
-+};
-+
-+static const char *colorname_light[] = {
-+	/* nirvana dark */
-+	COLOR_WHITE,
-+	COLOR_RED_BRIGHT,
-+	COLOR_GREEN_BRIGHT,
-+	COLOR_YELLOW_BRIGHT,
-+	COLOR_BLUE_BRIGHT,
-+	COLOR_MAGENTA_BRIGHT,
-+	COLOR_CYAN_BRIGHT,
-+	COLOR_GRAY2,
-+	COLOR_GRAY1,
-+	COLOR_RED,
-+	COLOR_GREEN,
-+	COLOR_YELLOW,
-+	COLOR_BLUE,
-+	COLOR_MAGENTA,
-+	COLOR_CYAN,
-+	COLOR_BLACK,
-+
-+	[255] = 0,
-+
-+	/* more colors can be added after 255 to use with DefaultXX */
-+	/* TODO: patch checkcolor() to make this work */
-+	"#cccccc",
-+	COLOR_BG,
-+	COLOR_FG,
-+};
-+
 +/* Terminal colors (16 first used in escape sequence) */
-+static char **colorname = colorname_light;
++static const char *colorname[] = {
++	/* 8 normal colors */
++	COLOR_BLACK,
++	COLOR_RED,
++	COLOR_GREEN,
++	COLOR_YELLOW,
++	COLOR_BLUE,
++	COLOR_MAGENTA,
++	COLOR_CYAN,
++	COLOR_GRAY1,
 +
++	/* 8 bright colors */
++	COLOR_GRAY2,
++	COLOR_RED_BRIGHT,
++	COLOR_GREEN_BRIGHT,
++	COLOR_YELLOW_BRIGHT,
++	COLOR_BLUE_BRIGHT,
++	COLOR_MAGENTA_BRIGHT,
++	COLOR_CYAN_BRIGHT,
++	COLOR_WHITE,
 +
++	[255] = 0,
++
++	/* more colors can be added after 255 to use with DefaultXX */
++	COLOR_FG, // 256
++	COLOR_BG, // 257
++	"#cccccc",  // 258
++	"#555555",  // 259
++};
++
++/* bg opacity */
++static const int alpha = 0xff;
 +
 +/*
 + * Default colors (colorname index)
-+ * foreground, background, cursor
++ * foreground, background, cursor, reverse cursor
 + */
-+static unsigned int defaultfg = 15;
-+static unsigned int defaultbg = 0;
-+static unsigned int defaultcs = 8;
-+static unsigned int defaultrcs = 7;
++static unsigned int defaultfg = 256;
++static unsigned int defaultbg = 257;
++static unsigned int defaultcs = 258;
++static unsigned int defaultrcs = 259;
 +
 +/*
 + * Default shape of cursor
@@ -219,7 +188,6 @@ index 0000000..07b1ac7
 + * 6: Bar ("|")
 + * 7: Snowman ("☃")
 + */
-+
 +static unsigned int cursorshape = 2;
 +
 +/*
@@ -230,6 +198,7 @@ index 0000000..07b1ac7
 +static unsigned int mousebg = 0;
 +
 +/*
++	"black",
 + * Colors used, when the specific fg == defaultfg. So in reverse mode this
 + * will reverse too. Another logic would only make the simple feature too
 + * complex.
@@ -237,8 +206,10 @@ index 0000000..07b1ac7
 +static unsigned int defaultitalic = 11;
 +static unsigned int defaultunderline = 7;
 +
-+/* Internal mouse shortcuts. */
-+/* Beware that overloading Button1 will disable the selection. */
++/*
++ * Internal mouse shortcuts.
++ * Beware that overloading Button1 will disable the selection.
++ */
 +static MouseShortcut mshortcuts[] = {
 +	/* button               mask            string */
 +	{ Button4,              XK_NO_MOD,      "\031" },
@@ -246,63 +217,10 @@ index 0000000..07b1ac7
 +};
 +
 +static MouseKey mkeys[] = {
-+	/* button   mask            function     argument */
-+	{ Button4,  XK_ANY_MOD,     kscrollup,   {.i = 1} },
-+	{ Button5,  XK_ANY_MOD,     kscrolldown, {.i = 1} },
++	/* button               mask            function        argument */
++	{ Button4,              XK_NO_MOD,      kscrollup,      {.i =  1} },
++	{ Button5,              XK_NO_MOD,      kscrolldown,    {.i =  1} },
 +};
-+
-+
-+static void switchcolor(const Arg *);
-+static void xloadcols(void);
-+static void redraw(void);
-+
-+
-+void switchcolor(const Arg *arg) {
-+  if (colorname == colorname_dark) colorname = colorname_light;
-+  else colorname = colorname_dark;
-+  xloadcols();
-+  redraw();
-+}
-+
-+// Checks which colorname we should set
-+char** checkcolor() {
-+  char path[128];
-+  strcpy(path, getenv("XDG_DATA_HOME"));
-+  strcat(path, "/colorscheme");
-+
-+  char data[256];
-+
-+  FILE* file = fopen(path, "r");
-+  if (file <= 0) {
-+    perror("Failed to read color scheme");
-+    return colorname_light;
-+  }
-+
-+  fgets(data, 256, (FILE*)file);
-+  fclose(file);
-+
-+  if (strcmp(data, "dark") == 0 || strcmp(data, "dark\n") == 0) {
-+    return colorname_dark;
-+  } else {
-+    return colorname_light;
-+  }
-+}
-+
-+void reloadcolor(const Arg *arg) {
-+  colorname = checkcolor();
-+  xloadcols();
-+  redraw();
-+}
-+
-+// Override main so we can check color schemes on startup. Yay hacks!
-+int main(int argc, char *argv[]) {
-+  colorname = checkcolor();
-+  return st_main(argc, argv);
-+}
-+
-+// Use #define to rename st's main.
-+#define main st_main
-+
 +
 +/* Internal keyboard shortcuts. */
 +#define MODKEY Mod1Mask
@@ -320,12 +238,9 @@ index 0000000..07b1ac7
 +	{ MODKEY|ShiftMask,     XK_Insert,      clippaste,      {.i =  0} },
 +	{ MODKEY|ShiftMask,     XK_C,           clipcopy,       {.i =  0} },
 +	{ MODKEY|ShiftMask,     XK_V,           clippaste,      {.i =  0} },
++	{ MODKEY,               XK_Num_Lock,    numlock,        {.i =  0} },
 +	{ ShiftMask,            XK_Page_Up,     kscrollup,      {.i = -1} },
 +	{ ShiftMask,            XK_Page_Down,   kscrolldown,    {.i = -1} },
-+	{ MODKEY|ShiftMask,     XK_T,           switchcolor,    {.i =  0} },
-+	{ MODKEY|ShiftMask,     XK_R,           reloadcolor,    {.i =  0} },
-+	{ MODKEY,               XK_Num_Lock,    numlock,        {.i =  0} },
-+	{ XK_ANY_MOD,           XK_F13,         reloadcolor,    {.i =  0} },
 +};
 +
 +/*
@@ -365,11 +280,17 @@ index 0000000..07b1ac7
 + */
 +static uint ignoremod = Mod2Mask|XK_SWITCH_MOD;
 +
-+/* Override mouse-select while mask is active (when MODE_MOUSE is set).
++/*
++ * Override mouse-select while mask is active (when MODE_MOUSE is set).
 + * Note that if you want to use ShiftMask with selmasks, set this to an other
-+ * modifier, set to 0 to not use it. */
++ * modifier, set to 0 to not use it.
++ */
 +static uint forceselmod = ShiftMask;
 +
++/*
++ * This is the huge key array which defines all compatibility to the Linux
++ * world. Please decide about changes wisely.
++ */
 +static Key key[] = {
 +	/* keysym           mask            string      appkey appcursor crlf */
 +	{ XK_KP_Home,       ShiftMask,      "\033[2J",       0,   -1,    0},
@@ -579,7 +500,6 @@ index 0000000..07b1ac7
 +static uint selmasks[] = {
 +	[SEL_RECTANGULAR] = Mod1Mask,
 +};
-+
 +/*
 + * Printable characters in ASCII, used to estimate the advance width
 + * of single wide characters.
@@ -588,6 +508,7 @@ index 0000000..07b1ac7
 +	" !\"#$%&'()*+,-./0123456789:;<=>?"
 +	"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
 +	"`abcdefghijklmnopqrstuvwxyz{|}~";
++
 diff --git a/config.mk b/config.mk
 index 81e3e47..ab35200 100644
 --- a/config.mk
