@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cd $HOME/wm
 cwd="$(pwd)"
 
 for d in *; do
